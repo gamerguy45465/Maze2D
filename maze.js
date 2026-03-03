@@ -83,44 +83,36 @@ class Maze {
             }
 
 
-            if (possibleMoves.length == 0)
+            if (possibleMoves.length === 0)
                 return;
-            let myChoice = possibleMoves[0]; // only 1
+            /*let myChoice = possibleMoves[0]; // only 1
             if (possibleMoves.length >= 2) // multiple choice
-                console.log(possibleMoves);
-                myChoice = possibleMoves[randomIntExclusive(0, possibleMoves.length)];
+                console.log(possibleMoves);*/
+            const myChoice = possibleMoves[randomIntExclusive(0, possibleMoves.length)];
 
-            if (myChoice == RIGHT) {
-                this.cells[r][c + 1].right = true;
-                this.cells[r][c].left = false;
-                this.cells[r][c].top = false;
-                this.cells[r][c].bottom = false;
+            if (myChoice === RIGHT) {
+                this.cells[r][c].right = false;
+                this.cells[r][c + 1].left = false;
                 this.carvePaths(c + 1, r);
             }
 
             // You do likewise for other 3 directions
-            if (myChoice == LEFT) {
-                this.cells[r][c - 1].left = true;
-                this.cells[r][c].right = false;
-                this.cells[r][c].top = false;
-                this.cells[r][c].bottom = false;
+            if (myChoice === LEFT) {
+                this.cells[r][c].left = false;
+                this.cells[r][c - 1].right = false;
                 this.carvePaths(c - 1, r);
             }
 
 
-            if (myChoice == UP) {
-                this.cells[r][c].left = false;
-                this.cells[r][c].right = false;
-                this.cells[r + 1][c].top = true;
-                this.cells[r][c].bottom = false;
+            if (myChoice === UP) {
+                this.cells[r][c].top = false;
+                this.cells[r + 1][c].bottom = false;
                 this.carvePaths(c, r + 1);
             }
 
-            if (myChoice == DOWN) {
-                this.cells[r][c].left = false;
-                this.cells[r][c].right = false;
-                this.cells[r][c].top = false;
-                this.cells[r - 1][c].bottom = true;
+            if (myChoice === DOWN) {
+                this.cells[r - 1][c].top = false;
+                this.cells[r][c].bottom = false;
                 this.carvePaths(c, r - 1);
             }
         }
@@ -132,6 +124,14 @@ class Maze {
     draw(gl, shaderProgram) {
         for (let r = 0; r < this.HEIGHT; r++) {
             for (let c = 0; c < this.WIDTH; c++) {
+                if(r === 0 && c === this.WIDTH-1)
+                {
+                    continue;
+                }
+                if(r === this.HEIGHT-1 && c === 0)
+                {
+                    continue;
+                }
                 this.cells[r][c].draw(gl, shaderProgram, c, r);
             }
         }

@@ -25,8 +25,8 @@ async function main() {
     const shaderProgram = initShaderProgram(gl, vertexShaderText, fragmentShaderText);
     gl.useProgram(shaderProgram);
 
-    const w = 5;
-    const h = 4;
+    const w = 20;
+    const h = 20;
     const m = new Maze(w, h);
 
     //
