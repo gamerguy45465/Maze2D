@@ -1,6 +1,5 @@
 //
 // Initialize a Shader Program, which consists of a Vertex Shader and a Fragment Shader, compiled and linked.
-// NOTE: This file never needs to be changed.
 //
 function initShaderProgram(gl, vsSource, fsSource) {
     // Create and compile the two shaders.
@@ -28,6 +27,8 @@ function initShaderProgram(gl, vsSource, fsSource) {
         console.error('ERROR validating program!', gl.getProgramInfoLog(shaderProgram));
         return;
     }
+
+    gl.useProgram(shaderProgram);
 
     return shaderProgram;
 }
@@ -57,4 +58,4 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-export {initShaderProgram};
+export { initShaderProgram };

@@ -1,9 +1,10 @@
-precision highp float;
+precision mediump float;
 
-varying vec2 pos_vector;
+attribute vec2 vertPosition;
+uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 
 void main()
 {
-    gl_Position = uProjectionMatrix * vec4(pos_vector, 0.0, 0.0);
+    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(vertPosition, 0.0, 1.0);
 }
