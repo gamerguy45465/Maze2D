@@ -31,11 +31,14 @@ class Cell {
         if (this.top) {
             vertices.push(x, y + 1, x + 1, y + 1);
         }
+        //19 0 is starting
 
         drawLines(gl, shaderProgram, vertices, [0, 0, 0, 1]);
 
     }
 }
+
+
 
 class Maze {
     constructor(width, height) {
@@ -49,6 +52,57 @@ class Maze {
             }
         }
         this.carvePaths(0, 0)
+    }
+
+    getCellFromWorld(x, y)
+    {
+        const c = Math.floor(x);
+        const r = Math.floor(y);
+
+        if (c < 0 || c >= this.WIDTH || r < 0 || r >= this.HEIGHT) {
+            return null;
+        }
+
+        return { c, r, cell: this.cells[r][c]};
+    }
+
+    canMoveBetween(fromC, fromR, toC, toR)
+    {
+        if (toC < 0 || toC >= this.WIDTH || toR < 0 || toR >= this.HEIGHT) {
+            return false;
+        }
+
+        const dc = toC - fromC;
+        const dr = toR - fromR;
+
+        if (Math.abs(dc) + Math.abs(dr) !== 1) {
+            return false;
+        }
+
+        const fromCell = this.cells[fromR][fromC];
+
+        if (dc === 1) return !fromCell.right;
+        if (dc === -1) return !fromCell.left;
+        if (dr === -1) return !fromCell.bottom;
+        if (dr === 1) return !fromCell.top;
+
+        return false;
+    }
+
+
+    canMoveToWorld(fromX, fromY, toX, toY) {
+        const fromInfo = this.getCellFromWorld(fromX, fromY);
+        const toInfo = this.getCellFromWorld(toX, toY);
+
+        if(!fromInfo || !toInfo) return false;
+
+
+        if (fromInfo.c === toInfo.c && fromInfo.r === toInfo.r)
+        {
+            return true;
+        }
+
+        return this.canMoveBetween(fromInfo.c, fromInfo.r, toInfo.c, toInfo.r);
     }
 
     carvePaths(c, r) {

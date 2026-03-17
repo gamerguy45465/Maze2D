@@ -29,6 +29,9 @@ async function main() {
     const h = 20;
     const m = new Maze(w, h);
 
+
+    console.log(m.cells);
+
     //
     // load a projection matrix onto the shader
     //
@@ -130,8 +133,95 @@ async function main() {
     const modelViewMatrix = mat4.create();
     gl.uniformMatrix4fv(modelViewMatrixUniformLocation, false, modelViewMatrix);
 
+    let triCenter = [19.5, 0.5];
+    let triAngle = 0;
+    let moveSpeed = 0.05;
+    //let rotateSpeed = Math.PI / 12;
+    let rotateSpeed = 0.08726646;
+
+
+    function makeTriangleCoords(cx, cy, angle) {
+        const localVerts = [
+            [0.0, 0.5],
+            [0.25, -0.3],
+            [-0.25, -0.3]
+        ];
+
+        const result = [];
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+
+        for (const [x,y] of localVerts) {
+            const rx = x * cosA - y * sinA;
+            const ry = x * sinA + y * cosA;
+            result.push(cx + rx, cy + ry);
+        }
+
+        return result;
+    }
+
+    let tri_coords = makeTriangleCoords(triCenter[0], triCenter[1], triAngle);
+    console.log(tri_coords);
+
+
+
+    addEventListener('keydown', (event) => {
+        const forwardX = -Math.sin(triAngle);
+        const forwardY = Math.cos(triAngle);
+
+        const rightX = Math.cos(triAngle);
+        const rightY = -Math.sin(triAngle);
+
+        let nextX = triCenter[0];
+        let nextY = triCenter[1];
+        let nextAngle = triAngle;
+
+        if (event.key === 'w') {
+            nextX += forwardX * moveSpeed;
+            nextY += forwardY * moveSpeed;
+        }
+
+        if (event.key === 's') {
+            nextX -= forwardX * moveSpeed;
+            nextY -= forwardY * moveSpeed;
+        }
+
+        if (event.key === 'd') {
+            nextX += rightX * moveSpeed;
+            nextY += rightY * moveSpeed;
+        }
+
+        if (event.key === 'a') {
+            nextX -= rightX * moveSpeed;
+            nextY -= rightY * moveSpeed;
+        }
+
+        if (event.key === 'q') {
+            nextAngle += rotateSpeed;
+        }
+
+        if (event.key === 'e') {
+            nextAngle -= rotateSpeed;
+        }
+
+        const nextTriCoords = makeTriangleCoords(nextX, nextY, nextAngle);
+
+        const canMove =
+            m.canMoveToWorld(tri_coords[0], tri_coords[1], nextTriCoords[0], nextTriCoords[1]) &&
+            m.canMoveToWorld(tri_coords[2], tri_coords[3], nextTriCoords[2], nextTriCoords[3]) &&
+            m.canMoveToWorld(tri_coords[4], tri_coords[5], nextTriCoords[4], nextTriCoords[5]);
+
+        if (canMove) {
+            triCenter[0] = nextX;
+            triCenter[1] = nextY;
+            triAngle = nextAngle;
+            tri_coords = nextTriCoords;
+        }
+    });
+
+
     //
-    // Create content to display
+    // Create content to displayw
     //
 
 
@@ -147,6 +237,7 @@ async function main() {
             DT = .1;
         previousTime = currentTime;
 
+        gl.clearColor(0.1, 0.3, 0.5, 1.0);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // This will always fill the whole canvas with whatever was specified in gl.clearColor.
@@ -162,7 +253,17 @@ async function main() {
 
         //drawLines(gl, shaderProgram, [-100, -100, 100, -100, -100, 100], nearWhite);
 
+        //drawCircle(gl, shaderProgram, coords[0], coords[1], 0.5, [1, 0, 0, 1] );
+
+        drawTriangle(gl, shaderProgram, tri_coords[0], tri_coords[1], tri_coords[2], tri_coords[3], tri_coords[4], tri_coords[5], [1, 0,0, 1]);
+
         m.draw(gl, shaderProgram);
+
+        //drawCircle(gl, shaderProgram, 40, 40, 5, [1, 0, 0, 1] );
+
+        //drawCircle(gl, shaderProgram, 19.5, 1, 0.1, [0, 1, 0, 1]);
+        //drawCircle(gl, shaderProgram, 19.75, 0.2, 0.1, [0, 0, 1, 1]);
+        //drawCircle(gl, shaderProgram, 19.25, 0.2, 0.1, [0, 0, 1, 1]);
 
         requestAnimationFrame(redraw);
     }
