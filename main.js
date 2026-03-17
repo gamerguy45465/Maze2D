@@ -160,6 +160,16 @@ async function main() {
         return result;
     }
 
+    function canPlaceTriangleAt(cx, cy, angle) {
+        const nextTriCoords = makeTriangleCoords(cx, cy, angle);
+
+        return (
+            m.canMoveToWorld(tri_coords[0], tri_coords[1], nextTriCoords[0], nextTriCoords[1]) &&
+            m.canMoveToWorld(tri_coords[2], tri_coords[3], nextTriCoords[2], nextTriCoords[3]) &&
+            m.canMoveToWorld(tri_coords[4], tri_coords[5], nextTriCoords[4], nextTriCoords[5])
+        );
+    }
+
     let tri_coords = makeTriangleCoords(triCenter[0], triCenter[1], triAngle);
     console.log(tri_coords);
 
@@ -172,28 +182,28 @@ async function main() {
         const rightX = Math.cos(triAngle);
         const rightY = -Math.sin(triAngle);
 
-        let nextX = triCenter[0];
-        let nextY = triCenter[1];
+        let dx = 0;
+        let dy = 0;
         let nextAngle = triAngle;
 
         if (event.key === 'w') {
-            nextX += forwardX * moveSpeed;
-            nextY += forwardY * moveSpeed;
+            dx += forwardX * moveSpeed;
+            dy += forwardY * moveSpeed;
         }
 
         if (event.key === 's') {
-            nextX -= forwardX * moveSpeed;
-            nextY -= forwardY * moveSpeed;
+            dx -= forwardX * moveSpeed;
+            dy -= forwardY * moveSpeed;
         }
 
         if (event.key === 'd') {
-            nextX += rightX * moveSpeed;
-            nextY += rightY * moveSpeed;
+            dx += rightX * moveSpeed;
+            dy += rightY * moveSpeed;
         }
 
         if (event.key === 'a') {
-            nextX -= rightX * moveSpeed;
-            nextY -= rightY * moveSpeed;
+            dx -= rightX * moveSpeed;
+            dy -= rightY * moveSpeed;
         }
 
         if (event.key === 'q') {
@@ -204,19 +214,50 @@ async function main() {
             nextAngle -= rotateSpeed;
         }
 
-        const nextTriCoords = makeTriangleCoords(nextX, nextY, nextAngle);
+        // Rotation-only move
+        if (dx === 0 && dy === 0) {
+            const rotatedCoords = makeTriangleCoords(triCenter[0], triCenter[1], nextAngle);
+            const canRotate =
+                m.canMoveToWorld(tri_coords[0], tri_coords[1], rotatedCoords[0], rotatedCoords[1]) &&
+                m.canMoveToWorld(tri_coords[2], tri_coords[3], rotatedCoords[2], rotatedCoords[3]) &&
+                m.canMoveToWorld(tri_coords[4], tri_coords[5], rotatedCoords[4], rotatedCoords[5]);
 
-        const canMove =
-            m.canMoveToWorld(tri_coords[0], tri_coords[1], nextTriCoords[0], nextTriCoords[1]) &&
-            m.canMoveToWorld(tri_coords[2], tri_coords[3], nextTriCoords[2], nextTriCoords[3]) &&
-            m.canMoveToWorld(tri_coords[4], tri_coords[5], nextTriCoords[4], nextTriCoords[5]);
-
-        if (canMove) {
-            triCenter[0] = nextX;
-            triCenter[1] = nextY;
-            triAngle = nextAngle;
-            tri_coords = nextTriCoords;
+            if (canRotate) {
+                triAngle = nextAngle;
+                tri_coords = rotatedCoords;
+            }
+            return;
         }
+
+        const tryX = triCenter[0] + dx;
+        const tryY = triCenter[1] + dy;
+
+        // 1. Try full move
+        if (canPlaceTriangleAt(tryX, tryY, nextAngle)) {
+            triCenter[0] = tryX;
+            triCenter[1] = tryY;
+            triAngle = nextAngle;
+            tri_coords = makeTriangleCoords(triCenter[0], triCenter[1], triAngle);
+            return;
+        }
+
+        // 2. Try X only
+        if (canPlaceTriangleAt(triCenter[0] + dx, triCenter[1], nextAngle)) {
+            triCenter[0] += dx;
+            triAngle = nextAngle;
+            tri_coords = makeTriangleCoords(triCenter[0], triCenter[1], triAngle);
+            return;
+        }
+
+        // 3. Try Y only
+        if (canPlaceTriangleAt(triCenter[0], triCenter[1] + dy, nextAngle)) {
+            triCenter[1] += dy;
+            triAngle = nextAngle;
+            tri_coords = makeTriangleCoords(triCenter[0], triCenter[1], triAngle);
+            return;
+        }
+
+        // 4. If neither axis works, don't move.
     });
 
 
